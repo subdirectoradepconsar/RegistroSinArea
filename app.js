@@ -6,14 +6,19 @@ async function registrarParticipante(datos) {
   if (registroEnCurso) throw new Error("Ya hay un envío en curso.");
   registroEnCurso = true;
   try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(datos),
-      redirect: "follow"
-    });
-    // La respuesta opaca no permite confirmar el guardado ni leer el JSON.
+    const payload = new Blob([JSON.stringify(datos)], { type: "text/plain;charset=utf-8" });
+    if (navigator.sendBeacon) {
+      if (!navigator.sendBeacon(APPS_SCRIPT_URL, payload)) {
+        throw new Error("El navegador no pudo iniciar el envío.");
+      }
+    } else {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: payload
+      });
+    }
+    // sendBeacon confirma que el navegador aceptó el envío, no que Sheets guardó la fila.
     return { status: "unconfirmed" };
   } finally {
     registroEnCurso = false;
