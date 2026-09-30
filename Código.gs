@@ -1,5 +1,5 @@
 const SPREADSHEET_ID = "1yYvjqEPxaqTM4x7P6PgZS9JXGklmFFVRZooEKz7uMhQ";
-const SHEET_GID = 0;
+const SHEET_NAME = "RegistroSinArea";
 
 function doPost(e) {
   try {
@@ -14,8 +14,8 @@ function doPost(e) {
     if (!/^\d{4}$/.test(String(datos.anioNacimiento))) throw new Error("Año de nacimiento inválido.");
 
     const libro = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const hoja = libro.getSheets().filter(function (item) { return item.getSheetId() === SHEET_GID; })[0];
-    if (!hoja) throw new Error("No se encontró la pestaña con gid=0.");
+    let hoja = libro.getSheetByName(SHEET_NAME);
+    if (!hoja) hoja = libro.insertSheet(SHEET_NAME);
     const ahora = new Date();
     const zona = libro.getSpreadsheetTimeZone();
     const anio = Number(datos.anioNacimiento);
@@ -27,7 +27,7 @@ function doPost(e) {
     } else {
       const actuales = hoja.getRange(1, 1, 1, encabezados.length).getValues()[0];
       if (actuales.some(function (valor, i) { return valor !== encabezados[i]; })) {
-        throw new Error("Los encabezados de A1:E1 no coinciden con el formato esperado.");
+        throw new Error("La pestaña RegistroSinArea tiene encabezados distintos en A1:E1.");
       }
     }
     hoja.appendRow([
